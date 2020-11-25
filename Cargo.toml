@@ -1,0 +1,23 @@
+[package]
+name = "simple_astar"
+version = "0.1.0"
+authors = ["tylervipond"]
+edition = "2018"
+
+[profile.release]
+lto = true
+
+[dependencies]
+smallvec = "1.5.0"
+fxhash = "0.2.1"
+priority-queue = "1.0.0"
+binary-heap-plus = "0.4.0"
+hashbrown = "0.3"
+
+[dev-dependencies]
+criterion = "0.3"
+bracket-pathfinding = "0.8.1"
+
+[[bench]]
+name = "astar_benchmark"
+harness = false
