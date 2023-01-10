@@ -30,7 +30,7 @@ impl PartialOrd for FrontierItem {
 #[inline(always)]
 fn get_neighbor_coords(
     current: u32,
-    grid: &Box<[u32]>,
+    grid: &Vec<u32>,
     width: u32,
     cardinal_directions: bool,
 ) -> SmallVec<[u32; 8]> {
@@ -85,7 +85,7 @@ fn manhattan(x1: i32, y1: i32, x2: i32, y2: i32) -> u32 {
 pub fn astar(
     start: u32,
     end: u32,
-    grid: &Box<[u32]>,
+    grid: &Vec<u32>,
     width: u32,
     cardinal_directions: bool,
 ) -> Vec<u32> {
@@ -171,19 +171,19 @@ mod tests {
 
     #[test]
     fn it_runs_in_a_straigh_line() {
-        let grid: Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        ]);
+        ];
         let path = astar(0, 24, &grid, 5, false);
         assert_eq!(path, vec![6, 12, 18, 24]);
     }
 
     #[test]
     fn it_avoids_walls() {
-        let grid: Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1,
             1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        ]);
+        ];
         let path = astar(0, 48, &grid, 7, false);
         assert_eq!(path, vec![8, 15, 22, 29, 37, 45, 46, 47, 48]);
     }
@@ -192,12 +192,12 @@ mod tests {
     #[rustfmt::skip]
     fn it_cuts_corners() {
         let width: u32 = 4;
-        let grid:Box<[u32]> = Box::new([
+        let grid = vec![
             1, 0, 1, 1,
             1, 0, 1, 1,
             1, 0, 1, 1,
             1, 1, 1, 1,
-        ]);
+        ];
         let path = astar(0, 15, &grid, width, false);
         assert_eq!(path, vec![
             xy_to_idx(0, 1, width), 
@@ -212,12 +212,12 @@ mod tests {
     #[rustfmt::skip]
     fn it_doesnt_cut_corners_using_cardinal_directions() {
         let width: u32 = 4;
-        let grid:Box<[u32]> = Box::new([
+        let grid = vec![
             1, 0, 1, 1,
             1, 0, 1, 1,
             1, 0, 1, 1,
             1, 1, 1, 1,
-        ]);
+        ];
         let path = astar(0, 15, &grid, width, true);
         assert_eq!(path, vec![
             xy_to_idx(0, 1, width), 

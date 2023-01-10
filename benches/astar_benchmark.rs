@@ -3,9 +3,9 @@ use simple_astar::astar;
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("simple_astar straight line 5 * 5", |b| {
-        let grid: Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        ]);
+        ];
         b.iter(|| {
             astar(
                 black_box(0),
@@ -17,10 +17,10 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
     c.bench_function("simple_astar avoid obstacle 7 * 7", |b| {
-        let grid: Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1,
             1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        ]);
+        ];
         b.iter(|| {
             astar(
                 black_box(0),
@@ -32,7 +32,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
     c.bench_function("simple_astar avoid obstacle 28 * 28", |b| {
-        let grid: Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1,
             0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0,
@@ -61,7 +61,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
             1,
-        ]);
+        ];
         b.iter(|| {
             astar(
                 black_box(0),
