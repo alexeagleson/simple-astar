@@ -1,6 +1,6 @@
 [package]
 name = "simple_astar"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["tylervipond"]
 edition = "2018"
 
