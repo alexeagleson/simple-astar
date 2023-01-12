@@ -1,7 +1,7 @@
+use fxhash::FxHashMap;
 use smallvec::{smallvec, SmallVec};
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
-use fxhash::FxHashMap;
 // it might be good to implement some different versions of this:
 // maybe one that does no diagonal, one that doesn't cut corners..
 // perhaps also one that caches neighbors and neighbor costs
@@ -28,7 +28,12 @@ impl PartialOrd for FrontierItem {
 }
 
 #[inline(always)]
-fn get_neighbor_coords(current: u32, grid: &Box<[u32]>, width: u32) -> SmallVec<[u32; 8]> {
+fn get_neighbor_coords(
+    current: u32,
+    grid: &Vec<u32>,
+    width: u32,
+    cardinal_directions: bool,
+) -> SmallVec<[u32; 8]> {
     let is_top = current < width;
     let is_bottom = current >= grid.len() as u32 - width;
     let x = current % width;
@@ -40,11 +45,13 @@ fn get_neighbor_coords(current: u32, grid: &Box<[u32]>, width: u32) -> SmallVec<
         if grid[top_index as usize] > 0 {
             neighbors.push(top_index)
         }
-        if !is_left && grid[top_index as usize - 1] > 0 {
-            neighbors.push(top_index - 1)
-        }
-        if !is_right && grid[top_index as usize + 1] > 0 {
-            neighbors.push(top_index + 1)
+        if !cardinal_directions {
+            if !is_left && grid[top_index as usize - 1] > 0 {
+                neighbors.push(top_index - 1)
+            }
+            if !is_right && grid[top_index as usize + 1] > 0 {
+                neighbors.push(top_index + 1)
+            }
         }
     }
     if !is_left && grid[current as usize - 1] > 0 {
@@ -58,11 +65,13 @@ fn get_neighbor_coords(current: u32, grid: &Box<[u32]>, width: u32) -> SmallVec<
         if grid[bottom_index as usize] > 0 {
             neighbors.push(bottom_index)
         }
-        if !is_left && grid[bottom_index as usize - 1] > 0 {
-            neighbors.push(bottom_index - 1)
-        }
-        if !is_right && grid[bottom_index as usize + 1] > 0 {
-            neighbors.push(bottom_index + 1)
+        if !cardinal_directions {
+            if !is_left && grid[bottom_index as usize - 1] > 0 {
+                neighbors.push(bottom_index - 1)
+            }
+            if !is_right && grid[bottom_index as usize + 1] > 0 {
+                neighbors.push(bottom_index + 1)
+            }
         }
     }
     neighbors
@@ -73,7 +82,13 @@ fn manhattan(x1: i32, y1: i32, x2: i32, y2: i32) -> u32 {
     ((x1 - x2).abs() + (y1 - y2).abs()) as u32
 }
 
-pub fn astar(start: u32, end: u32, grid: &Box<[u32]>, width: u32) -> Vec<u32> {
+pub fn astar(
+    start: u32,
+    end: u32,
+    grid: &Vec<u32>,
+    width: u32,
+    cardinal_directions: bool,
+) -> Vec<u32> {
     let mut frontier = BinaryHeap::with_capacity(grid.len());
     let mut cost_so_far = FxHashMap::default();
     let mut came_from = FxHashMap::default();
@@ -87,7 +102,8 @@ pub fn astar(start: u32, end: u32, grid: &Box<[u32]>, width: u32) -> Vec<u32> {
         if current_position == end {
             break;
         }
-        let neighbor_coords = get_neighbor_coords(current_position, grid, width);
+        let neighbor_coords =
+            get_neighbor_coords(current_position, grid, width, cardinal_directions);
         for idx in 0..neighbor_coords.len() {
             let neighbor = neighbor_coords[idx];
             let neighbor_cost = grid[neighbor as usize];
@@ -142,22 +158,74 @@ pub fn astar(start: u32, end: u32, grid: &Box<[u32]>, width: u32) -> Vec<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn xy_to_idx(x: u32, y: u32, width: u32) -> u32 {
+        (y * width) + x
+    }
+
+    #[test]
+    fn xy_to_idx_works() {
+        assert_eq!(xy_to_idx(1, 1, 7), 8);
+        assert_eq!(xy_to_idx(1, 2, 7), 15);
+    }
+
     #[test]
     fn it_runs_in_a_straigh_line() {
-        let grid:Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        ]);
-        let path = astar(0, 24, &grid, 5);
+        ];
+        let path = astar(0, 24, &grid, 5, false);
         assert_eq!(path, vec![6, 12, 18, 24]);
     }
 
     #[test]
     fn it_avoids_walls() {
-        let grid:Box<[u32]> = Box::new([
+        let grid = vec![
             1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 0, 1, 1, 1, 0, 0, 1, 0, 1, 1, 1, 0, 1, 1, 0, 1, 1,
             1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-        ]);
-        let path = astar(0, 48, &grid, 7);
+        ];
+        let path = astar(0, 48, &grid, 7, false);
         assert_eq!(path, vec![8, 15, 22, 29, 37, 45, 46, 47, 48]);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn it_cuts_corners() {
+        let width: u32 = 4;
+        let grid = vec![
+            1, 0, 1, 1,
+            1, 0, 1, 1,
+            1, 0, 1, 1,
+            1, 1, 1, 1,
+        ];
+        let path = astar(0, 15, &grid, width, false);
+        assert_eq!(path, vec![
+            xy_to_idx(0, 1, width), 
+            xy_to_idx(0, 2, width),
+            xy_to_idx(1, 3, width),
+            xy_to_idx(2, 3, width),
+            xy_to_idx(3, 3, width),
+        ]);
+    }
+
+    #[test]
+    #[rustfmt::skip]
+    fn it_doesnt_cut_corners_using_cardinal_directions() {
+        let width: u32 = 4;
+        let grid = vec![
+            1, 0, 1, 1,
+            1, 0, 1, 1,
+            1, 0, 1, 1,
+            1, 1, 1, 1,
+        ];
+        let path = astar(0, 15, &grid, width, true);
+        assert_eq!(path, vec![
+            xy_to_idx(0, 1, width), 
+            xy_to_idx(0, 2, width),
+            xy_to_idx(0, 3, width),
+            xy_to_idx(1, 3, width),
+            xy_to_idx(2, 3, width),
+            xy_to_idx(3, 3, width),
+        ]);
     }
 }
